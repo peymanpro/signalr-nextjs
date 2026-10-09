@@ -130,7 +130,6 @@ export class AdaptiveRetryPolicy {
     if (baselineDelayMs === null || retryIndex >= MAX_RETRY_ATTEMPTS || elapsedMilliseconds >= MAX_ELAPSED_MS) {
       this.pendingDelayMs = null;
       this.retryCount = retryIndex;
-      this.terminalCount += 1;
       this.lastDecision = {
         mode: this.mode, action: "stop", baselineDelayMs: null, recommendedDelayMs: null,
         selectedDelayMs: null, reason: "The deterministic retry-attempt or elapsed-time limit has been reached.",
