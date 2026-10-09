@@ -77,6 +77,14 @@ The typecheck script performs syntax checks because the project intentionally re
 
 The client has a small runtime-defined protocol and no generated server contract. A partial TypeScript migration would not provide end-to-end safety at the SignalR boundary. Runtime normalization and a narrow state model provide explicit protections without introducing a second source of truth. A shared/generated contract would be a good reason to migrate.
 
+## LNASF: outcome-aware reconnect policy
+
+`lib/chat/lnasf-retry-policy.ts` is a native TypeScript learning component used by the SignalR reconnect policy. It records success/failure outcomes for each bounded delay, predicts success probability and confidence using Laplace-smoothed online counts, and calculates a simple utility that penalizes longer delays. The decision policy is separate from the prediction and selects a learned delay only when there is enough evidence and a material utility gain over the deterministic schedule.
+
+Configure `NEXT_PUBLIC_LNASF_MODE=passive` (default), `advisory`, or `adaptive`. Passive learns without changing the retry schedule. Advisory exposes the recommended delay but uses the baseline schedule. Adaptive may select only from the fixed delay candidates `[0, 2000, 5000, 10000]`, with at most four retries and a 30-second elapsed-time cap. Insufficient evidence or a weak utility comparison falls back to the baseline; leaving the page is not counted as a failed attempt. The UI exposes mode, observed outcome count, and the latest policy decision. Model state is in memory and resets on page reload.
+
+The LNASF tests use a deterministic clock and synthetic success/failure observations to cover online updates, confidence, prediction/decision separation, mode behavior, feedback, and retry bounds. They are not a real-network performance benchmark; no improvement in recovery latency is claimed.
+
 ## Limitations
 
 This repository is a frontend client, not a complete chat service. It does not provide authentication, authorization, persistence, historical message retrieval, optimistic delivery acknowledgements, or integration tests against a live hub. The server remains responsible for authorization, rate limiting, and authoritative validation.
