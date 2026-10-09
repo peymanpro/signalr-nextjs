@@ -73,6 +73,14 @@ npm run build
 
 The typecheck script performs syntax checks because the project intentionally remains JavaScript. The domain tests cover validation boundaries, message de-duplication, presence normalization, state transitions, and the retained-history limit. GitHub Actions also checks out and builds the companion `signalr-aspnetcore` project, starts its actual .NET 8 Hub, and runs a live transport integration test with two `@microsoft/signalr` connections. That test verifies room join, chat message delivery, and `TypingStart`/`TypingStop` events.
 
+To run the live transport test locally, start the companion ASP.NET Core Hub on port 5000 and run:
+
+```bash
+LNASF_LIVE_HUB_URL=http://127.0.0.1:5000/chat npm run test:integration
+```
+
+Without `LNASF_LIVE_HUB_URL`, the dedicated integration test is skipped; the normal `npm test` suite remains deterministic and service-independent.
+
 ## Why JavaScript instead of TypeScript?
 
 The client has a small runtime-defined protocol and no generated server contract. A partial TypeScript migration would not provide end-to-end safety at the SignalR boundary. Runtime normalization and a narrow state model provide explicit protections without introducing a second source of truth. A shared/generated contract would be a good reason to migrate.
