@@ -91,7 +91,7 @@ Framework context: [LNASF concept and architecture](https://github.com/peymanpro
 
 ## Dependency audit status
 
-The original 2026-10-09 audit snapshot reported 16 findings. Next.js and React were upgraded to patched compatible direct versions. The repository now uses an explicit ESLint 9 toolchain with React, Hooks, and JSX accessibility rules instead of `eslint-config-next`, whose transitive development-tool tree included the currently unpatched `braces` advisory. This avoids downgrading the Next.js runtime or silently accepting the advisory. The latest CI audit result for the prior toolchain is documented in the central framework notes; the current independent lint-toolchain audit is verified by the remediation workflow. The trade-off is that Next-specific `@next/eslint-plugin-next` rules are no longer enabled; React, hooks, accessibility and core ESLint checks remain. Audit results are snapshots, not proof of runtime exploitability.
+The original 2026-10-09 audit snapshot reported 16 findings. Next.js and React were upgraded to compatible patched direct versions, and the vulnerable development-time `eslint-config-next` chain was replaced with ESLint 9 plus React, Hooks, and JSX accessibility rules. The verified remediation workflow passed lint, syntax/type-oriented checks, all 15 tests, and production build; its npm audit snapshot reported 0 findings ([workflow](https://github.com/peymanpro/signalr-nextjs/actions/runs/37995149518)). The trade-off is that Next-specific `@next/eslint-plugin-next` rules are no longer enabled; React, Hooks, accessibility, and core ESLint checks remain. Audit results are snapshots, not proof of runtime exploitability.
 
 ## Limitations
 
