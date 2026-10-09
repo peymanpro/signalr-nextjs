@@ -89,6 +89,10 @@ The LNASF tests use a deterministic clock and synthetic success/failure observat
 
 Framework context: [LNASF concept and architecture](https://github.com/peymanpro/learning-native-adaptive-software-framework) · [Technical specification](https://github.com/peymanpro/learning-native-adaptive-software-framework/blob/main/SPECIFICATION.md). This repository implements only the specific LNASF subset documented above; it is not a complete framework implementation.
 
+## Dependency audit status
+
+The non-blocking npm audit snapshot from 2026-10-09 reported 16 advisories (1 critical, 13 high, 1 moderate, 1 low). The direct Next.js dependency is currently pinned at 16.2.4 and is included in multiple advisory ranges. npm reports a same-major update path, but the manifest and lockfile have not yet been upgraded. Keep production release gated on a deliberate dependency update, fresh audit and passing CI; these audit findings do not alone establish exploitability in the deployed configuration.
+
 ## Limitations
 
 This repository is a frontend client, not a complete chat service. It does not provide authentication, authorization, persistence, historical message retrieval, optimistic delivery acknowledgements, or integration tests against a live hub. The server remains responsible for authorization, rate limiting, and authoritative validation.
