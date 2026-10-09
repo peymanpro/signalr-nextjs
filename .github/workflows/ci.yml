@@ -66,3 +66,36 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
+      - name: Check out the live ASP.NET Core SignalR backend
+        uses: actions/checkout@v7
+        with:
+          repository: peymanpro/signalr-aspnetcore
+          ref: 9025c0aaa7c24e4afc48bbcfc53caa936eb2bd6c
+          path: signalr-backend
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build the live SignalR backend
+        run: |
+          dotnet restore signalr-backend/src/src.csproj
+          dotnet build signalr-backend/src/src.csproj --configuration Release --no-restore
+      - name: Start the live SignalR Hub
+        run: |
+          ASPNETCORE_URLS=http://127.0.0.1:5000 CHAT_ALLOWED_ORIGINS=http://localhost:3000 LNASF_MODE=passive dotnet run --project signalr-backend/src/src.csproj --configuration Release --no-build > "$RUNNER_TEMP/signalr-backend.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/signalr-backend.pid"
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:5000/health > /dev/null; then
+              echo "SignalR backend is healthy."
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/signalr-backend.log"
+          exit 1
+      - name: Live Next.js client transport integration
+        env:
+          LNASF_LIVE_HUB_URL: http://127.0.0.1:5000/chat
+          NEXT_PUBLIC_SIGNALR_HUB_URL: http://127.0.0.1:5000/chat
+          NEXT_PUBLIC_LNASF_MODE: passive
+        run: npm run test:integration
