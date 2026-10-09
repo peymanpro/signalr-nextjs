@@ -1,0 +1,66 @@
+name: One-time Next.js dependency remediation
+
+on:
+  push:
+    branches:
+      - 'remediate/next-16-4-security-20261010'
+
+permissions:
+  contents: write
+
+jobs:
+  remediate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out remediation branch
+        uses: actions/checkout@v7
+        with:
+          ref: remediate/next-16-4-security-20261010
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install and regenerate the lockfile for patched direct dependencies
+        run: npm install --save-exact next@16.4.0 react@19.3.0 react-dom@19.3.0 eslint-config-next@16.4.0 --no-fund
+
+      - name: Apply non-breaking audit remediations
+        run: npm audit fix --no-fund || echo "Some advisories remain; no force upgrade will be applied."
+
+      - name: Verify clean lockfile installation
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Syntax/type checks
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Record remaining audit findings
+        run: |
+          npm audit --json > "$RUNNER_TEMP/npm-audit.json" || true
+          node -e 'const fs=require("node:fs"); const r=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+"/npm-audit.json","utf8")); console.log("NPM_AUDIT_SUMMARY="+JSON.stringify(r.metadata?.vulnerabilities ?? {}));'
+
+      - name: Commit verified lockfile and remove temporary workflow
+        env:
+          BRANCH_NAME: remediate/next-16-4-security-20261010
+        run: |
+          rm .github/workflows/remediate-next.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+            exit 0
+          fi
+          git commit -m "security: update Next.js and React dependencies"
+          git push origin "HEAD:refs/heads/$BRANCH_NAME"
