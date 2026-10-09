@@ -30,6 +30,10 @@ export default [
     },
   },
   {
+    files: ["lib/chat/protocol.mjs"],
+    rules: { "no-control-regex": "off" },
+  },
+  {
     ignores: [".next/**", "out/**", "build/**", "next-env.d.ts", "node_modules/**"],
   },
 ];
