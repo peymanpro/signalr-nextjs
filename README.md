@@ -91,7 +91,7 @@ Framework context: [LNASF concept and architecture](https://github.com/peymanpro
 
 ## Dependency audit status
 
-The non-blocking npm audit snapshot from 2026-10-09 reported 16 advisories (1 critical, 13 high, 1 moderate, 1 low). The direct Next.js dependency is currently pinned at 16.2.4 and is included in multiple advisory ranges. npm reports a same-major update path, but the manifest and lockfile have not yet been upgraded. Keep production release gated on a deliberate dependency update, fresh audit and passing CI; these audit findings do not alone establish exploitability in the deployed configuration.
+The 2026-10-09 baseline audit reported 16 advisories (1 critical, 13 high, 1 moderate, 1 low). This branch upgrades Next.js and `eslint-config-next` to 16.4.0 and React/React DOM to 19.3.0, regenerates the lockfile, and applies non-breaking transitive fixes. The post-update GitHub Actions audit snapshot reported 5 high-severity advisories and no critical, moderate, or low findings. Review the latest CI audit output and investigate the remaining high findings before production use. Audit findings are advisories, not automatic proof of exploitability.
 
 ## Limitations
 
