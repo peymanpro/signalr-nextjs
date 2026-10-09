@@ -71,7 +71,7 @@ npm test
 npm run build
 ```
 
-The typecheck script performs syntax checks because the project intentionally remains JavaScript. The domain tests cover validation boundaries, message de-duplication, presence normalization, state transitions, and the retained-history limit. GitHub Actions runs lint, syntax checks, tests, and a production build.
+The typecheck script performs syntax checks because the project intentionally remains JavaScript. The domain tests cover validation boundaries, message de-duplication, presence normalization, state transitions, and the retained-history limit. GitHub Actions also checks out and builds the companion `signalr-aspnetcore` project, starts its actual .NET 8 Hub, and runs a live transport integration test with two `@microsoft/signalr` connections. That test verifies room join, chat message delivery, and `TypingStart`/`TypingStop` events.
 
 ## Why JavaScript instead of TypeScript?
 
@@ -83,7 +83,7 @@ The client has a small runtime-defined protocol and no generated server contract
 
 Configure `NEXT_PUBLIC_LNASF_MODE=passive` (default), `advisory`, or `adaptive`. Passive learns without changing the retry schedule. Advisory exposes the recommended delay but uses the baseline schedule. Adaptive may select only from the fixed delay candidates `[0, 2000, 5000, 10000]`, with at most four retries and a 30-second elapsed-time cap. A zero-millisecond delay is eligible only for the first retry slot; later retry decisions keep a minimum 1-second delay floor. HTTP failures classified as non-retryable (including 400, 401, 403, 404, 405 and 426) stop the automatic loop without being taught as a failed delay outcome. Unknown network failures remain retryable by default. Insufficient evidence or a weak utility comparison falls back to the baseline; leaving the page is not counted as a failed attempt. The UI exposes mode, observed outcome count, and the latest policy decision. Model state is in memory and resets on page reload.
 
-The LNASF tests use a deterministic clock and synthetic success/failure observations to cover online updates, confidence, prediction/decision separation, mode behavior, feedback, and retry bounds. They are not a real-network performance benchmark; no improvement in recovery latency is claimed.
+The LNASF unit tests use a deterministic clock and synthetic success/failure observations to cover online updates, confidence, prediction/decision separation, mode behavior, feedback, and retry bounds. The live transport test is run separately with `LNASF_LIVE_HUB_URL=http://127.0.0.1:5000/chat npm run test:integration` while the companion ASP.NET Core Hub is running on port 5000. It verifies the client/Hub event contract, not reconnect-performance improvement.
 
 
 
@@ -95,4 +95,4 @@ The original 2026-10-09 audit snapshot reported 16 findings. Next.js and React w
 
 ## Limitations
 
-This repository is a frontend client, not a complete chat service. It does not provide authentication, authorization, persistence, historical message retrieval, optimistic delivery acknowledgements, or integration tests against a live hub. The server remains responsible for authorization, rate limiting, and authoritative validation.
+This repository is a frontend client, not a complete chat service. CI now exercises two client connections against the live ASP.NET Core Hub at the transport/event-contract level. It still does not have a browser-driven UI test, does not provide authentication, authorization, persistence, historical message retrieval, or optimistic delivery acknowledgements, and has no real-network performance benchmark. The server remains responsible for authorization, rate limiting, and authoritative validation.
