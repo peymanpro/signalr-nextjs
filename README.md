@@ -99,7 +99,7 @@ Framework context: [LNASF concept and architecture](https://github.com/peymanpro
 
 ## Dependency audit status
 
-The original 2026-10-09 audit snapshot reported 16 findings. Next.js and React were upgraded to compatible patched direct versions, and the vulnerable development-time `eslint-config-next` chain was replaced with ESLint 9 plus React, Hooks, and JSX accessibility rules. The verified remediation workflow passed lint, syntax/type-oriented checks, all 15 tests, and production build; its npm audit snapshot reported 0 findings ([workflow](https://github.com/peymanpro/signalr-nextjs/actions/runs/37995149518)). The trade-off is that Next-specific `@next/eslint-plugin-next` rules are no longer enabled; React, Hooks, accessibility, and core ESLint checks remain. Audit results are snapshots, not proof of runtime exploitability.
+The original 2026-10-09 audit snapshot reported 16 findings. Next.js and React were upgraded to compatible patched direct versions, and the vulnerable development-time `eslint-config-next` chain was replaced with ESLint 9 plus React, Hooks, and JSX accessibility rules. The latest verified pre-gate audit snapshot reported 0 findings ([workflow](https://github.com/peymanpro/signalr-nextjs/actions/runs/37996041822)). CI now fails when high or critical npm audit findings are present; lower-severity findings remain visible in the report. See the [CI workflow](https://github.com/peymanpro/signalr-nextjs/actions/workflows/ci.yml) for the enforced check. The trade-off is that Next-specific `@next/eslint-plugin-next` rules are no longer enabled; React, Hooks, accessibility, and core ESLint checks remain. Audit results are snapshots, not proof of runtime exploitability.
 
 ## Limitations
 
