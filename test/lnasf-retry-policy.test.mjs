@@ -73,6 +73,9 @@ test("non-retryable HTTP errors stop retries without contaminating the outcome m
   assert.equal(isRetryableFailure({ statusCode: 401, message: "Unauthorized" }), false);
   assert.equal(isRetryableFailure({ data: { statusCode: 403 } }), false);
   assert.equal(isRetryableFailure({ statusCode: 503, message: "Service unavailable" }), true);
+  assert.equal(isRetryableFailure({ description: { status: 404 }, message: "Transport failed" }), false);
+  assert.equal(isRetryableFailure({ response: { status: 503 } }), true);
+  assert.equal(isRetryableFailure(new Error("Failed negotiation: Status code '404'")), false);
   assert.equal(isRetryableFailure(new Error("ECONNRESET")), true);
 
   const policy = new AdaptiveRetryPolicy({ mode: "adaptive", now: () => 1000 });
