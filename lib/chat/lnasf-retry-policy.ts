@@ -3,6 +3,7 @@ export type LnasfMode = "passive" | "advisory" | "adaptive";
 export interface RetryContext {
   previousRetryCount?: number;
   elapsedMilliseconds?: number;
+  retryReason?: unknown;
 }
 
 export interface DelayOutcome {
@@ -38,6 +39,22 @@ const DELAY_COST_WEIGHT = 0.15;
 
 export function normalizeLnasfMode(value: string | undefined): LnasfMode {
   return value === "advisory" || value === "adaptive" || value === "passive" ? value : "passive";
+}
+
+const NON_RETRYABLE_STATUS_CODES = new Set([400, 401, 403, 404, 405, 426]);
+
+export function isRetryableFailure(reason: unknown): boolean {
+  if (!reason || typeof reason !== "object") return true;
+  const value = reason as { statusCode?: unknown; status?: unknown; message?: unknown; retryable?: unknown; data?: unknown };
+  const data = value.data && typeof value.data === "object"
+    ? value.data as { statusCode?: unknown; status?: unknown; retryable?: unknown }
+    : undefined;
+  if (value.retryable === false || data?.retryable === false) return false;
+  const status = [value.statusCode, value.status, data?.statusCode, data?.status]
+    .find((candidate) => typeof candidate === "number");
+  if (typeof status === "number" && NON_RETRYABLE_STATUS_CODES.has(status)) return false;
+  const message = typeof value.message === "string" ? value.message : "";
+  return !/unauthorized|unauthorised|forbidden|not authorized|hub not found|invalid hub url/i.test(message);
 }
 
 export class RetryOutcomeModel {
@@ -116,10 +133,24 @@ export class AdaptiveRetryPolicy {
   }
 
   nextRetryDelay(context: RetryContext = {}): number | null {
-    this.settlePendingFailure();
     const retryIndex = Number.isInteger(context.previousRetryCount) && context.previousRetryCount! >= 0
       ? context.previousRetryCount!
       : this.retryCount;
+    if (!isRetryableFailure(context.retryReason)) {
+      this.pendingDelayMs = null;
+      this.retryCount = 0;
+      this.episodeStartedAt = null;
+      this.lastDecision = {
+        mode: this.mode, action: "stop", baselineDelayMs: null, recommendedDelayMs: null,
+        selectedDelayMs: null,
+        reason: "The SignalR failure is classified as non-retryable; no delay outcome was learned.",
+        elapsedMilliseconds: Math.max(0, context.elapsedMilliseconds ?? 0), retryIndex,
+      };
+      this.notify();
+      return null;
+    }
+
+    this.settlePendingFailure();
     const now = this.now();
     if (this.episodeStartedAt === null) this.episodeStartedAt = now;
     const elapsedMilliseconds = Number.isFinite(context.elapsedMilliseconds)
@@ -144,8 +175,10 @@ export class AdaptiveRetryPolicy {
     const baselineUtility = observedBaseline && observedBaseline.attempts >= MIN_DELAY_SAMPLES
       ? observedBaseline.utility
       : 0.5 - (baselineDelayMs / MAX_DELAY_MS) * DELAY_COST_WEIGHT;
+    const minimumAllowedDelayMs = retryIndex === 0 ? 0 : 1_000;
     const isMateriallyBetter = Boolean(
       prediction &&
+      prediction.delayMs >= minimumAllowedDelayMs &&
       prediction.delayMs !== baselineDelayMs &&
       prediction.utility >= baselineUtility + MIN_UTILITY_GAIN
     );
