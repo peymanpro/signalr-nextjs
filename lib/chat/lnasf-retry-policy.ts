@@ -45,16 +45,38 @@ const NON_RETRYABLE_STATUS_CODES = new Set([400, 401, 403, 404, 405, 426]);
 
 export function isRetryableFailure(reason: unknown): boolean {
   if (!reason || typeof reason !== "object") return true;
-  const value = reason as { statusCode?: unknown; status?: unknown; message?: unknown; retryable?: unknown; data?: unknown };
-  const data = value.data && typeof value.data === "object"
-    ? value.data as { statusCode?: unknown; status?: unknown; retryable?: unknown }
-    : undefined;
-  if (value.retryable === false || data?.retryable === false) return false;
-  const status = [value.statusCode, value.status, data?.statusCode, data?.status]
-    .find((candidate) => typeof candidate === "number");
+  type FailureDetails = {
+    statusCode?: unknown;
+    status?: unknown;
+    message?: unknown;
+    statusText?: unknown;
+    retryable?: unknown;
+  };
+  const value = reason as FailureDetails & { data?: unknown; description?: unknown; response?: unknown };
+  const asDetails = (candidate: unknown): FailureDetails | undefined =>
+    candidate && typeof candidate === "object" ? candidate as FailureDetails : undefined;
+  const data = asDetails(value.data);
+  const description = asDetails(value.description);
+  const response = asDetails(value.response);
+
+  if (value.retryable === false || data?.retryable === false || description?.retryable === false) return false;
+
+  // Transport libraries expose HTTP status in different places (directly, in data,
+  // or on a nested response/description object). Inspect these known shapes before
+  // classifying by message; do not train a retry-delay model on permanent failures.
+  const status = [
+    value.statusCode, value.status,
+    data?.statusCode, data?.status,
+    description?.statusCode, description?.status,
+    response?.statusCode, response?.status,
+  ].find((candidate) => typeof candidate === "number");
   if (typeof status === "number" && NON_RETRYABLE_STATUS_CODES.has(status)) return false;
-  const message = typeof value.message === "string" ? value.message : "";
-  return !/unauthorized|unauthorised|forbidden|not authorized|hub not found|invalid hub url/i.test(message);
+
+  const message = [value.message, data?.message, description?.message, response?.statusText]
+    .filter((candidate): candidate is string => typeof candidate === "string")
+    .join(" ");
+  if (/\b(?:status(?:\s+code)?)\s*[:'"]?\s*(400|401|403|404|405|426)\b/i.test(message)) return false;
+  return !/unauthorized|unauthorised|forbidden|not authorized|not found|bad request|method not allowed|upgrade required|invalid hub url/i.test(message);
 }
 
 export class RetryOutcomeModel {
