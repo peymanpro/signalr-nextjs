@@ -85,6 +85,10 @@ Configure `NEXT_PUBLIC_LNASF_MODE=passive` (default), `advisory`, or `adaptive`.
 
 The LNASF tests use a deterministic clock and synthetic success/failure observations to cover online updates, confidence, prediction/decision separation, mode behavior, feedback, and retry bounds. They are not a real-network performance benchmark; no improvement in recovery latency is claimed.
 
+
+
+Framework context: [LNASF concept and architecture](https://github.com/peymanpro/learning-native-adaptive-software-framework) · [Technical specification](https://github.com/peymanpro/learning-native-adaptive-software-framework/blob/main/SPECIFICATION.md). This repository implements only the specific LNASF subset documented above; it is not a complete framework implementation.
+
 ## Limitations
 
 This repository is a frontend client, not a complete chat service. It does not provide authentication, authorization, persistence, historical message retrieval, optimistic delivery acknowledgements, or integration tests against a live hub. The server remains responsible for authorization, rate limiting, and authoritative validation.
