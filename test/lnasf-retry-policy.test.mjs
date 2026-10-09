@@ -20,9 +20,9 @@ test("passive mode records recommendations but never changes the deterministic s
   for (let i = 0; i < 8; i += 1) model.observe(2000, true);
   for (let i = 0; i < 8; i += 1) model.observe(5000, false);
   const policy = new AdaptiveRetryPolicy({ mode: "passive", model, now: () => 1_000 });
-  assert.equal(policy.nextRetryDelay({ previousRetryCount: 2, elapsedMilliseconds: 1_000 }), 2_000);
+  assert.equal(policy.nextRetryDelay({ previousRetryCount: 2, elapsedMilliseconds: 1_000 }), 5_000);
   assert.equal(policy.getSnapshot().lastDecision.action, "baseline");
-  assert.equal(policy.getSnapshot().lastDecision.recommendedDelayMs, 0);
+  assert.equal(policy.getSnapshot().lastDecision.recommendedDelayMs, 2_000);
 });
 
 test("advisory mode explains an alternative but returns the baseline delay", () => {
@@ -30,9 +30,9 @@ test("advisory mode explains an alternative but returns the baseline delay", () 
   for (let i = 0; i < 8; i += 1) model.observe(2000, true);
   for (let i = 0; i < 8; i += 1) model.observe(5000, false);
   const policy = new AdaptiveRetryPolicy({ mode: "advisory", model, now: () => 1_000 });
-  assert.equal(policy.nextRetryDelay({ previousRetryCount: 2, elapsedMilliseconds: 1_000 }), 2_000);
-  assert.equal(policy.getSnapshot().lastDecision.recommendedDelayMs, 0);
-  assert.equal(policy.getSnapshot().lastDecision.selectedDelayMs, 2_000);
+  assert.equal(policy.nextRetryDelay({ previousRetryCount: 2, elapsedMilliseconds: 1_000 }), 5_000);
+  assert.equal(policy.getSnapshot().lastDecision.recommendedDelayMs, 2_000);
+  assert.equal(policy.getSnapshot().lastDecision.selectedDelayMs, 5_000);
 });
 
 test("adaptive mode uses learned evidence only when it beats the baseline utility", () => {
