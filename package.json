@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --test test/**/*.test.mjs",
-    "typecheck": "node --check lib/chat/config.mjs && node --check lib/chat/reducer.mjs && node --check lib/chat/signalr-client.mjs && node --check lib/chat/use-chat-connection.mjs"
+    "typecheck": "node --check lib/chat/config.mjs && node --check lib/chat/protocol.mjs && node --check lib/chat/reducer.mjs && node --check lib/chat/signalr-client.mjs && node --check lib/chat/use-chat-connection.mjs"
   },
   "dependencies": {
     "@microsoft/signalr": "^10.0.0",
