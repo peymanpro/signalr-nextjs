@@ -64,13 +64,13 @@ export function isRetryableFailure(reason: unknown): boolean {
   // Transport libraries expose HTTP status in different places (directly, in data,
   // or on a nested response/description object). Inspect these known shapes before
   // classifying by message; do not train a retry-delay model on permanent failures.
-  const status = [
+  const hasNonRetryableStatus = [
     value.statusCode, value.status,
     data?.statusCode, data?.status,
     description?.statusCode, description?.status,
     response?.statusCode, response?.status,
-  ].find((candidate) => typeof candidate === "number");
-  if (typeof status === "number" && NON_RETRYABLE_STATUS_CODES.has(status)) return false;
+  ].some((candidate) => typeof candidate === "number" && NON_RETRYABLE_STATUS_CODES.has(candidate));
+  if (hasNonRetryableStatus) return false;
 
   const message = [value.message, data?.message, description?.message, response?.statusText]
     .filter((candidate): candidate is string => typeof candidate === "string")
